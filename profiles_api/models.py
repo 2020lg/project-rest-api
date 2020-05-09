@@ -9,14 +9,15 @@ class UserProfileManager(BaseUserManager):
 
     def create_user(self, email, name, password=None):
         """Create a new user profile"""
-        if not email:
-            raise ValueError("Users must have an email address")
+        if not email: # if an empty string or null
+            raise ValueError("User must have an email address")
 
-        email = self.normalize_email(email)
+        email = self.normalize_email(email) # makes the second half (domain portion) of email all lowercase
         user = self.model(email=email, name=name)
 
-        user.set_password(password)
-        user.save(using=self._db)
+        user.set_password(password) # sets the user’s password to the given raw string, taking care of the password hashing
+                                    # when the password is None, the password will be set to an unusable password
+        user.save(using=self._db) # supports multiple DBs
 
         return user
 
