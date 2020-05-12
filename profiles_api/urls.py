@@ -8,5 +8,6 @@ router.register('profile', views.UserProfileViewSet) # no need to specify base_n
 
 urlpatterns = [
     path('hello-view/', views.HelloApiView.as_view()), # it will match webserveraddress/api/hello-view
+    path('login/', views.UserLoginApiView.as_view()),
     path('', include(router.urls)) # '' means no prefix is required. 'router.urls' is a list of generated urls
 ]
