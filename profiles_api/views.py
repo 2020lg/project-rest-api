@@ -2,8 +2,17 @@ from rest_framework.views import APIView
 from rest_framework.response import Response # standard Response object that's returned when from APIView
 from rest_framework import status
 from rest_framework import viewsets
+from rest_framework.authentication import TokenAuthentication # token authentication is a type of authentication we use
+                                                              # for users to authenticate themselves with our API.
+                                                              # It works by generating a random token string when the user logs in
+                                                              # and then every request we make to that API that we need to authenticate
+                                                              # we add this token string to the request ie it's effectively a password
+                                                              # to check that every request that's made is authenticated correctly
+from rest_framework import filters
 
 from profiles_api import serializers
+from profiles_api import models
+from profiles_api import permissions
 
 
 class HelloApiView(APIView): # creates a new class based on APIView class that Django REST framework provides
@@ -97,3 +106,13 @@ class HelloViewSet(viewsets.ViewSet):
     def destroy(self, request, pk=None):
         """Handle removing an object"""
         return Response({'http_method': 'DELETE'})
+
+class UserProfileViewSet(viewsets.ModelViewSet): # ModelViewSet is specifically designed for managing models through our API
+    """Handle creating and updating profiles"""
+    serializer_class = serializers.UserProfileSerializer
+    queryset = models.UserProfile.objects.all() # DRF knows the standard functions that you would want to perform on ModelViewSet: create, list, update, partial_update, destroy.
+                                                # DRF takes care of all that by assigning a a serializer_class to a model Serializer and queryset
+    authentication_classes = (TokenAuthentication,) # tuple, you can add all authentication classes here, but we'll be using AuthToken
+    permission_classes = (permissions.UpdateOwnProfile,)
+    filter_backends = (filters.SearchFilter,) # tuple
+    search_fields = ('name', 'email',) # searchable fields
