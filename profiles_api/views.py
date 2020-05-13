@@ -9,8 +9,9 @@ from rest_framework.authentication import TokenAuthentication # token authentica
                                                               # we add this token string to the request ie it's effectively a password
                                                               # to check that every request that's made is authenticated correctly
 from rest_framework import filters
-from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.authtoken.views import ObtainAuthToken # DRF comes with an Auth Token view out the box
 from rest_framework.settings import api_settings
+from rest_framework.permissions import IsAuthenticated
 
 from profiles_api import serializers
 from profiles_api import models
@@ -65,6 +66,7 @@ class HelloApiView(APIView): # creates a new class based on APIView class that D
         """Delete an object"""
         return Response({'method': 'DELETE'})
 
+
 class HelloViewSet(viewsets.ViewSet):
     """Test API ViewSet"""
     serializer_class = serializers.HelloSerializer
@@ -109,6 +111,7 @@ class HelloViewSet(viewsets.ViewSet):
         """Handle removing an object"""
         return Response({'http_method': 'DELETE'})
 
+
 class UserProfileViewSet(viewsets.ModelViewSet): # ModelViewSet is specifically designed for managing models through our API
     """Handle creating and updating profiles"""
     serializer_class = serializers.UserProfileSerializer
@@ -119,6 +122,19 @@ class UserProfileViewSet(viewsets.ModelViewSet): # ModelViewSet is specifically 
     filter_backends = (filters.SearchFilter,) # tuple
     search_fields = ('name', 'email',) # searchable fields
 
+
 class UserLoginApiView(ObtainAuthToken):
     """Handle creating user authentication tokens"""
-    renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
+    renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES # ObtainAuthToken class doesn't by default enable itself in the browsable Django admin site.
+
+                                                         # So we need to overwrite this class and customize it so it's visible in the browsable API
+class UserProfileFeedViewSet(viewsets.ModelViewSet):
+    """Handles creating, reading and updating profile feed items"""
+    authentication_classes = (TokenAuthentication,)
+    serializer_class = serializers.ProfileFeedItemSerializer
+    queryset = models.ProfileFeedItem.objects.all()
+    permission_classes = (permissions.UpdateOwnStatus, IsAuthenticated)
+
+    def perform_create(self, serializer):
+        """Sets the user profile to the logged-in user"""
+        serializer.save(user_profile=self.request.user)                                                         # and it makes us easier for us to test. We need to add renderer_classes manually.

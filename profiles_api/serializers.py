@@ -23,7 +23,7 @@ class UserProfileSerializer(serializers.ModelSerializer): # ModelSerializer has 
     def create(self, validated_data):
         """
         Create and return a new user.
-        Overwrites the default create function of the Object Manager
+        Overwrites the default DRF create() function of the Object Manager
         So the password gets created as a hash not a clear text password by default.
         """
         user = models.UserProfile.objects.create_user(
@@ -37,7 +37,7 @@ class UserProfileSerializer(serializers.ModelSerializer): # ModelSerializer has 
     def update(self, instance, validated_data):
         """
         Handle updating user account.
-        Overwrites the default update function to hash the user's password when updating.
+        Overwrites the default DRF update() function to hash the user's password when updating.
         Otherwise, If a user updates their profile, the password field is stored in cleartext,
         and they are unable to login.
         """
@@ -47,3 +47,15 @@ class UserProfileSerializer(serializers.ModelSerializer): # ModelSerializer has 
             instance.set_password(password)
 
         return super().update(instance, validated_data)
+
+class ProfileFeedItemSerializer(serializers.ModelSerializer):
+    """Serializes profile feed items"""
+
+    class Meta:
+        model = models.ProfileFeedItem
+        fields = ('id', 'user_profile', 'status_text', 'created_on')
+        extra_kwargs = {
+            'user_profile': {
+                'read_only': True
+            }
+        }
