@@ -53,7 +53,7 @@ class ProfileFeedItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.ProfileFeedItem
-        fields = ('id', 'user_profile', 'status_text', 'created_on')
+        fields = ('id', 'user_profile', 'status_text', 'created_on') # by default Django adds key 'id' to all models we create
         extra_kwargs = {
             'user_profile': {
                 'read_only': True

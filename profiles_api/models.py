@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.contrib.auth.models import BaseUserManager
-from django.conf import settings
+from django.conf import settings # used to retrieve settings from settings.py file
 
 
 class UserProfileManager(BaseUserManager):
@@ -60,12 +60,12 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
 class ProfileFeedItem(models.Model):
     """Profile status update"""
     user_profile = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE
+        settings.AUTH_USER_MODEL, # best practice to retrieve UserProfile from settings.py. YOu may decide that you want to switch out the UserProfile model as out default auth model and you want to use Django default model. If you hard code it to the name of the model , then you'd have to manually update all the foreign keys
+        on_delete=models.CASCADE # tell the DB what to do if the remote field is deleted. If user profile is deleted, then all the related feed items are also deleted (cascade)
     )
-    status_text = models.CharField(max_length=225)
-    created_on = models.DateTimeField(auto_now_add=True)
+    status_text = models.CharField(max_length=255) # contains the text of the feed update
+    created_on = models.DateTimeField(auto_now_add=True) # every time the feed item is created, the time stamp is auto added
 
-    def __str__(self):
+    def __str__(self): # string representation of our model to tell Python what to do when we convert a model instance into a string. 
         """Return the model as a string"""
         return self.status_text

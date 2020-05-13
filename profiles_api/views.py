@@ -11,7 +11,7 @@ from rest_framework.authentication import TokenAuthentication # token authentica
 from rest_framework import filters
 from rest_framework.authtoken.views import ObtainAuthToken # DRF comes with an Auth Token view out the box
 from rest_framework.settings import api_settings
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated # blocks access to the entire endpoint unless the user is authenticated
 
 from profiles_api import serializers
 from profiles_api import models
@@ -126,8 +126,10 @@ class UserProfileViewSet(viewsets.ModelViewSet): # ModelViewSet is specifically 
 class UserLoginApiView(ObtainAuthToken):
     """Handle creating user authentication tokens"""
     renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES # ObtainAuthToken class doesn't by default enable itself in the browsable Django admin site.
+                                                             # So we need to overwrite this class and customize it so it's visible in the browsable API
+                                                            # and it makes us easier for us to test. We need to add renderer_classes manually.
 
-                                                         # So we need to overwrite this class and customize it so it's visible in the browsable API
+
 class UserProfileFeedViewSet(viewsets.ModelViewSet):
     """Handles creating, reading and updating profile feed items"""
     authentication_classes = (TokenAuthentication,)
@@ -135,6 +137,12 @@ class UserProfileFeedViewSet(viewsets.ModelViewSet):
     queryset = models.ProfileFeedItem.objects.all()
     permission_classes = (permissions.UpdateOwnStatus, IsAuthenticated)
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer): # DRF's function that allows you to customize the behavior for creating objects through a model ViewSet. When a request gets made to our ViewSet, it gets passed to our serializer class and validated, and then the serializer.save() is called by default.
         """Sets the user profile to the logged-in user"""
-        serializer.save(user_profile=self.request.user)                                                         # and it makes us easier for us to test. We need to add renderer_classes manually.
+        serializer.save(user_profile=self.request.user) # when a new object is created (HTTP POST call), DRF calls perform_create() and it passes in the serializer that we are using to create the object.
+                                                        # The serializer is a model serializer so it has a save() function assigned to it. That save() function is used to save the contents of the serializer to an object in the DB.
+                                                        # We are calling serializer.save() and we are passing in an additional keyword for the 'user_profile'. This gets passed in in addition to all the items in the serializer that've benn validated.
+                                                        # Request object is an object that gets passed into all viewsets every time a request is made.
+                                                        # Request contains all the details about the request being made to the viewset.
+                                                        # If the user has authenticated, then the request has a user associated to the authenticated user. So the user field is added whenever the user is authenticated.
+                                                        # If the user is not authenticated, it's just set to an anonymous user account.
